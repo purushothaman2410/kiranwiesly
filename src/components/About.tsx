@@ -42,7 +42,7 @@ export const About = () => {
           <div className="relative">
             <div className="relative z-10">
               <img
-                src="/placeholder.svg"
+                src="https://res.cloudinary.com/dqopsgfom/image/upload/v1749223874/k3_yhuz4f.jpg"
                 alt="Kiran Wesley"
                 className="w-full max-w-md mx-auto rounded-lg shadow-2xl"
               />
