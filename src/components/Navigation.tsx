@@ -25,8 +25,8 @@ export const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-2">
             <img 
-              src="/placeholder.svg" 
-              alt="KW Logo" 
+              src="/lovable-uploads/18b75167-90d4-4a97-acbc-c8b6d5c02211.png" 
+              alt="Kiran Wesley Photography Logo" 
               className="w-10 h-10 rounded-full"
             />
             <span className="text-white font-bold text-lg">Kiran Wesley</span>

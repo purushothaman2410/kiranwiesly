@@ -23,7 +23,7 @@ export const Hero = () => {
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: "url('/placeholder.svg')",
+          backgroundImage: "url('/lovable-uploads/6f37b9ce-23f4-441a-b80a-f2b85bf2ebc1.png')",
         }}
       ></div>
 
