@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Camera, Instagram, Youtube } from "lucide-react";
+import { TextAnimation } from "./TextAnimation";
 
 export const Hero = () => {
   const handleWhatsApp = () => {
@@ -15,6 +16,8 @@ export const Hero = () => {
     window.open("https://www.youtube.com/@kiran_wesley", "_blank");
   };
 
+  const animatedTexts = ["Photography", "Videography", "Film Making"];
+
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center bg-black">
       <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black opacity-90"></div>
@@ -27,14 +30,17 @@ export const Hero = () => {
         }}
       ></div>
 
-      <div className="relative z-10 text-center text-white px-4">
+      <div className="relative z-10 text-center text-white px-4" data-reveal>
         <div className="flex justify-center mb-6">
           <Camera size={64} className="text-yellow-400" />
         </div>
         
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6">
           Kiran Wesley
-          <span className="block text-yellow-400">Photography</span>
+          <TextAnimation 
+            texts={animatedTexts}
+            className="mt-4"
+          />
         </h1>
         
         <p className="text-xl md:text-2xl mb-8 text-gray-300 max-w-2xl mx-auto">
