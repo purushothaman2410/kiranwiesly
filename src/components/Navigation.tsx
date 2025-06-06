@@ -48,12 +48,12 @@ export const Navigation = () => {
         data-header
       >
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-20">
             <div className="flex items-center space-x-2">
               <img 
                 src="/lovable-uploads/18b75167-90d4-4a97-acbc-c8b6d5c02211.png" 
                 alt="Kiran Wesley Photography Logo" 
-                className="w-10 h-10 rounded-full"
+                className="w-20 h-auto rounded-full"
               />
               <span className="text-white font-bold text-lg">Kiran Wesley</span>
             </div>

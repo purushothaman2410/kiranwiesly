@@ -27,10 +27,13 @@ export const Hero = () => {
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: "url('/lovable-uploads/6f37b9ce-23f4-441a-b80a-f2b85bf2ebc1.png')",
+          filter: "blur(8px)",
+          opacity: 0.5,
+          backgroundSize: "cover",
         }}
       ></div>
 
-      <div className="relative z-10 text-center text-white px-4" data-reveal>
+      <div className="relative z-10 text-center text-white px-4 mt-8" data-reveal>
         <div className="flex justify-center mb-6">
           <Camera size={64} className="text-yellow-400" />
         </div>
