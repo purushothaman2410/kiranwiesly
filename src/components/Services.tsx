@@ -6,57 +6,57 @@ export const Services = () => {
   const services = [
     {
       title: "Christian Wedding",
-      image: "/placeholder.svg",
+      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224032/cm1_gkgutf.jpg",
       description: "Complete Christian wedding photography and videography services"
     },
     {
       title: "Hindu Wedding",
-      image: "/placeholder.svg",
+      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224049/hm3_povm3o.jpg",
       description: "Traditional Hindu wedding ceremonies captured beautifully"
     },
     {
       title: "Birthday Shoots",
-      image: "/placeholder.svg",
+      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224030/birthdaybaby_dmjoda.jpg",
       description: "Memorable birthday celebration photography"
     },
     {
       title: "Candid Photography",
-      image: "/placeholder.svg",
+      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749223786/candid_rgvtep.jpg",
       description: "Natural, spontaneous moments captured perfectly"
     },
     {
       title: "Couple Shoots",
-      image: "/placeholder.svg",
+      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224027/couple6_ecqgoz.jpg",
       description: "Romantic couple photography sessions"
     },
     {
       title: "Cinematic Wedding",
-      image: "/placeholder.svg",
+      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224010/couple3_karski.jpg",
       description: "Movie-style wedding videography"
     },
     {
       title: "Short Film Making",
-      image: "/placeholder.svg",
+      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224056/Film_ljnhdf.jpg",
       description: "Professional short film production"
     },
     {
       title: "Drone Photography",
-      image: "/placeholder.svg",
+      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224053/Drone_nfkmfm.jpg",
       description: "Aerial photography and videography"
     },
     {
       title: "Film Making",
-      image: "/placeholder.svg",
+      image: "/https://res.cloudinary.com/dqopsgfom/image/upload/v1749224056/Film_ljnhdf.jpg",
       description: "Complete film production services"
     },
     {
       title: "Advertisement Making",
-      image: "/placeholder.svg",
+      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749223967/f7_rlxqes.jpg",
       description: "Professional advertisement creation"
     },
     {
       title: "Live Streaming",
-      image: "/placeholder.svg",
+      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224004/Led_screens_d13rqx.webp",
       description: "YouTube live streaming and LED wall services"
     }
   ];
