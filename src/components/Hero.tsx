@@ -1,7 +1,42 @@
-
 import { Button } from "@/components/ui/button";
 import { Camera, Instagram, Youtube } from "lucide-react";
 import { TextAnimation } from "./TextAnimation";
+import { useEffect, useState } from "react";
+
+const SlidingBackground = () => {
+  const images = [
+    "https://res.cloudinary.com/dqopsgfom/image/upload/v1749223874/k3_yhuz4f.jpg",
+    "/lovable-uploads/6f37b9ce-23f4-441a-b80a-f2b85bf2ebc1.png"
+  ];
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+    }, 5000); // every 5s
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="absolute inset-0">
+      {images.map((img, index) => (
+        <div
+          key={index}
+          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out bg-cover bg-center bg-no-repeat`}
+          style={{
+            backgroundImage: `url('${img}')`,
+            opacity: index === currentIndex ? 0.5 : 0,
+            filter: "blur(8px)",
+            backgroundAttachment: "fixed",
+            zIndex: 0,
+          }}
+        ></div>
+      ))}
+    </div>
+  );
+};
+
 
 export const Hero = () => {
   const handleWhatsApp = () => {
@@ -20,44 +55,35 @@ export const Hero = () => {
 
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center bg-black">
+      {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black opacity-90"></div>
-      
-      {/* Background Image */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: "url('https://res.cloudinary.com/dqopsgfom/image/upload/v1749223874/k3_yhuz4f.jpg')",
-          filter: "blur(8px)",
-          opacity: 0.5,
-          backgroundSize: "cover",
-        }}
-      ></div>
 
+      {/* Sliding Background */}
+      <SlidingBackground />
+
+      {/* Hero Content */}
       <div className="relative z-10 text-center text-white px-4 mt-8" data-reveal>
         <div className="flex justify-center mb-6">
           <Camera size={64} className="text-yellow-400" />
         </div>
-        
+
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6">
           Kiran Wesley
-          <TextAnimation 
-            texts={animatedTexts}
-            className="mt-4"
-          />
+          <TextAnimation texts={animatedTexts} className="mt-4" />
         </h1>
-        
+
         <p className="text-xl md:text-2xl mb-8 text-gray-300 max-w-2xl mx-auto">
           Capturing life's precious moments with passion and creativity for over 10 years
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-          <Button 
+          <Button
             onClick={handleWhatsApp}
             className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg"
           >
             Book Your Session
           </Button>
-          
+
           <div className="flex gap-4">
             <Button
               variant="outline"
@@ -67,7 +93,7 @@ export const Hero = () => {
             >
               <Instagram size={20} />
             </Button>
-            
+
             <Button
               variant="outline"
               size="icon"
