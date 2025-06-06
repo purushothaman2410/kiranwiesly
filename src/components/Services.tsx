@@ -36,7 +36,7 @@ export const Services = () => {
     },
     {
       title: "Short Film Making",
-      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224056/Film_ljnhdf.jpg",
+      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224012/short-film_pvrxev.webp",
       description: "Professional short film production"
     },
     {
@@ -46,7 +46,7 @@ export const Services = () => {
     },
     {
       title: "Film Making",
-      image: "/https://res.cloudinary.com/dqopsgfom/image/upload/v1749224056/Film_ljnhdf.jpg",
+      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224056/Film_ljnhdf.jpg",
       description: "Complete film production services"
     },
     {
