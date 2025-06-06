@@ -26,7 +26,7 @@ export const Hero = () => {
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: "url('/lovable-uploads/6f37b9ce-23f4-441a-b80a-f2b85bf2ebc1.png')",
+          backgroundImage: "url('https://res.cloudinary.com/dqopsgfom/image/upload/v1749223874/k3_yhuz4f.jpg')",
           filter: "blur(8px)",
           opacity: 0.5,
           backgroundSize: "cover",

@@ -6,25 +6,25 @@ import { Button } from "@/components/ui/button";
 export const Portfolio = () => {
   const portfolioItems = [
     {
-      image: "/placeholder.svg",
+      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749223785/baby3_shqguj.jpg",
       title: "Baby Shoots",
       category: "Babies",
       link: "https://www.instagram.com/kiranwesley_photography/"
     },
     {
-      image: "/placeholder.svg",
+      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224032/cm1_gkgutf.jpg",
       title: "Wedding Shot",
       category: "Wedding",
       link: "https://www.instagram.com/kiranwesley_photography/"
     },
     {
-      image: "/placeholder.svg",
+      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749223960/f5_toccwg.jpg",
       title: "Fashion Show",
       category: "Fashion, Model",
       link: "https://www.instagram.com/kiranwesley_photography/"
     },
     {
-      image: "/placeholder.svg",
+      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224121/w1_mlnr5o.jpg",
       title: "Nature Photography",
       category: "Peace",
       link: "https://www.instagram.com/kiranwesley_photography/"
