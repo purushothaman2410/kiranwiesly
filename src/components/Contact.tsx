@@ -134,7 +134,7 @@ export const Contact = () => {
             © Copyright Kiran Wesley Photography. All Rights Reserved
           </p>
           <p className="text-gray-500 text-sm mt-2">
-            Design By Flyhii @https.flyhii.com
+            Design By Flyhii @https://www.flyhii.in
           </p>
         </div>
       </div>
