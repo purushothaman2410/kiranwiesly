@@ -55,7 +55,6 @@ export const Navigation = () => {
                 alt="Kiran Wesley Photography Logo" 
                 className="w-20 h-auto rounded-full"
               />
-              <span className="text-white font-bold text-lg">Kiran Wesley</span>
             </div>
 
             {/* Desktop Navigation */}
