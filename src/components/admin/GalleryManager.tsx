@@ -1,10 +1,16 @@
-
-import { useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from "react";
 import { PhotoUpload } from "./PhotoUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { Trash2, Edit } from "lucide-react";
 
 interface GalleryImage {
@@ -15,35 +21,65 @@ interface GalleryImage {
 }
 
 export const GalleryManager = () => {
-  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([
-    {
-      id: "1",
-      url: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749223966/f1_hts7yr.jpg",
-      title: "Fashion Photography",
-      category: "Fashion"
-    },
-    {
-      id: "2",
-      url: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224049/hm3_povm3o.jpg",
-      title: "Wedding Photography",
-      category: "Wedding"
-    }
-  ]);
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [editingId, setEditingId] = useState<string>("");
   const [editTitle, setEditTitle] = useState("");
   const [editCategory, setEditCategory] = useState("");
 
   const categories = ["Nature", "Wedding", "Fashion", "Babies", "Couples"];
 
-  const handleUpload = (file: File, title: string) => {
-    const newImage: GalleryImage = {
-      id: Date.now().toString(),
-      url: URL.createObjectURL(file),
-      title: title,
-      category: "Nature" // Default category
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/gallery");
+        const data = await res.json();
+        const formatted = data.map((img: any) => ({
+          id: img._id,
+          title: img.title,
+          category: img.category,
+          url: img.url
+        }));
+        setGalleryImages(formatted);
+      } catch (err) {
+        console.error("Failed to fetch images:", err);
+      }
     };
-    setGalleryImages([...galleryImages, newImage]);
-  };
+
+    fetchImages();
+  }, []);
+
+  const handleUpload = async (file: File, title: string, category: string) => {
+  const formData = new FormData();
+  formData.append("image", file);       // ✅ Make sure backend expects 'image'
+  formData.append("title", title);      // ✅ Make sure backend expects 'title'
+  formData.append("category", category); // ✅ Make sure backend expects 'category'
+
+  try {
+    const res = await fetch("http://localhost:5000/api/gallery/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      const newImage: GalleryImage = {
+        id: data._id,
+        url: data.url,
+        title: data.title,
+        category: data.category,
+      };
+      setGalleryImages((prev) => [...prev, newImage]);
+    } else {
+      console.error("Server error response:", data);
+      alert("Upload failed: " + (data.message || data.error || "Unknown error"));
+    }
+  } catch (error) {
+    console.error("Upload error:", error);
+    alert("Something went wrong while uploading.");
+  }
+};
+
 
   const handleDelete = (id: string) => {
     setGalleryImages(galleryImages.filter(img => img.id !== id));
