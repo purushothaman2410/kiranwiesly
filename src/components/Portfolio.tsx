@@ -1,10 +1,30 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Instagram, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { recentWorksApi } from "@/services/api";
+import { useEffect, useState } from "react";
 
 export const Portfolio = () => {
-  const portfolioItems = [];
+  const [recentWorks, setRecentWorks] = useState<any[]>([]);
+  useEffect(() => {
+        const fetchRecentImages = async () => {
+          try {
+            const data = await recentWorksApi.getAll(); 
+            const formatted = data.map((item: any) => ({
+              id: item._id,
+              url: item.base64 || item.image,
+              title: item.title || item.filename,
+              category: item.category || "Uncategorized",
+            }));
+            setRecentWorks(formatted);
+          } catch (error) {
+            console.error("Failed to load gallery images:", error);
+          }
+        };
+        fetchRecentImages();
+      }, []);
 
   const handleInstagram = () => {
     window.open("https://www.instagram.com/kiranwesley_photography/", "_blank");
@@ -23,12 +43,12 @@ export const Portfolio = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          {portfolioItems.map((item, index) => (
+          {recentWorks.map((item, index) => (
             <Card key={index} className="group overflow-hidden hover:shadow-2xl transition-all duration-500">
               <CardContent className="p-0">
                 <div className="relative overflow-hidden">
                   <img
-                    src={item.image}
+                    src={item.url}
                     alt={item.title}
                     className="w-full h-96 object-cover group-hover:scale-110 transition-transform duration-500"
                   />
