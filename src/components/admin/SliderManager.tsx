@@ -9,9 +9,10 @@ import { sliderApi } from "@/services/api";
 
 interface SliderImage {
   id: string;
-  url: string;
+  base64: string;
   title: string;
 }
+
 
 export const SliderManager = ({ onUpload }: { onUpload: (file: File, title: string) => void }) => {
   const [sliderImages, setSliderImages] = useState<SliderImage[]>([]);
@@ -19,13 +20,13 @@ export const SliderManager = ({ onUpload }: { onUpload: (file: File, title: stri
   const [editTitle, setEditTitle] = useState("");
 
   useEffect(() => {
-    const fetchSliderImages = async () => {
+   const fetchSliderImages = async () => {
       try {
         const data = await sliderApi.getAll();
         const formatted = data.map((item: any) => ({
           id: item._id,
-          url: item.url,
-          title: item.title
+          base64: item.base64,
+          title: item.title || item.filename,
         }));
         setSliderImages(formatted);
       } catch (error) {
@@ -39,11 +40,14 @@ export const SliderManager = ({ onUpload }: { onUpload: (file: File, title: stri
   const handleUpload = async (file: File, title: string) => {
     try {
       const data = await sliderApi.upload(file, title);
-      setSliderImages(prev => [...prev, {
-        id: data._id,
-        url: data.url,
-        title: data.title
-      }]);
+      setSliderImages(prev => [
+        ...prev,
+        {
+          id: data._id,
+          base64: data.base64, // ✅ use base64 instead of url
+          title: data.title || data.filename, // fallback to filename if title is not present
+        }
+      ]);
     } catch (error) {
       console.error("Upload error:", error);
       alert("Upload failed");
@@ -88,7 +92,7 @@ export const SliderManager = ({ onUpload }: { onUpload: (file: File, title: stri
           <Card key={image.id} className="overflow-hidden">
             <CardContent className="p-0">
               <img
-                src={image.url}
+                src={image.base64}
                 alt={image.title}
                 className="w-full h-48 object-cover"
               />

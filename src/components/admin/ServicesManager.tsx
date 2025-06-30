@@ -2,93 +2,91 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Trash2, Edit } from "lucide-react";
 import { servicesApi } from "@/services/api";
 
 interface Service {
   id: string;
-  image: string;
+  base64: string;
   title: string;
-  description: string;
 }
 
 export const ServicesManager = () => {
-  const [services, setServices] = useState<Service[]>([]);
+  const [services, setServicesImages] = useState<Service[]>([]);
   const [editingId, setEditingId] = useState<string>("");
   const [editTitle, setEditTitle] = useState("");
-  const [editDescription, setEditDescription] = useState("");
 
-  // Fetch services from backend on mount
+  // Fetch all service images
   useEffect(() => {
-    const fetchServices = async () => {
+    const fetchServicesImages = async () => {
       try {
         const data = await servicesApi.getAll();
         const formatted = data.map((item: any) => ({
           id: item._id,
-          image: item.url,
-          title: item.title,
-          description: item.description,
+          base64: item.base64, // backend sends base64 field
+          title: item.title || item.filename,
         }));
-        setServices(formatted);
+        setServicesImages(formatted);
       } catch (error) {
-        console.error("Failed to fetch services:", error);
+        console.error("Failed to load services:", error);
       }
     };
-
-    fetchServices();
+    fetchServicesImages();
   }, []);
 
-  // Upload service image + title + description
-  const handleUpload = async (file: File, title: string, description: string) => {
+  // Upload service image + title
+  const handleUpload = async (file: File, title: string) => {
     try {
-      const data = await servicesApi.upload(file, title, description);
-      setServices(prev => [...prev, {
-        id: data._id,
-        image: data.url,
-        title: data.title,
-        description: data.description,
-      }]);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("title", title);
+
+      const data = await servicesApi.upload(file , title);
+
+      setServicesImages(prev => [
+        ...prev,
+        {
+          id: data.id || data._id,
+          base64: data.base64,
+          title: data.title || data.filename || title,
+        },
+      ]);
     } catch (error) {
       console.error("Upload error:", error);
       alert("Upload failed");
     }
   };
 
-  // Delete service by ID
   const handleDelete = async (id: string) => {
     try {
       await servicesApi.delete(id);
-      setServices(services.filter(service => service.id !== id));
+      setServicesImages(prev => prev.filter(service => service.id !== id));
     } catch (error) {
       console.error("Delete error:", error);
       alert("Delete failed");
     }
   };
 
-  // Save title & description changes
   const handleSaveEdit = async (id: string) => {
     try {
-      await servicesApi.update(id, editTitle, editDescription);
-      setServices(services.map(service =>
-        service.id === id
-          ? { ...service, title: editTitle, description: editDescription }
-          : service
-      ));
+      await servicesApi.update(id, editTitle);
+      setServicesImages(prev =>
+        prev.map(service =>
+          service.id === id ? { ...service, title: editTitle } : service
+        )
+      );
       setEditingId("");
       setEditTitle("");
-      setEditDescription("");
     } catch (error) {
       console.error("Update error:", error);
       alert("Update failed");
     }
   };
 
-  const handleEdit = (id: string, currentTitle: string, currentDescription: string) => {
+  const handleEdit = (id: string, currentTitle: string) => {
     setEditingId(id);
     setEditTitle(currentTitle);
-    setEditDescription(currentDescription);
   };
 
   return (
@@ -100,7 +98,7 @@ export const ServicesManager = () => {
           <Card key={service.id} className="overflow-hidden">
             <CardContent className="p-0">
               <img
-                src={service.image}
+                src={service.base64}
                 alt={service.title}
                 className="w-full h-48 object-cover"
               />
@@ -112,13 +110,6 @@ export const ServicesManager = () => {
                       onChange={(e) => setEditTitle(e.target.value)}
                       placeholder="Service Title"
                       className="text-sm"
-                    />
-                    <Textarea
-                      value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
-                      placeholder="Service Description"
-                      className="text-sm"
-                      rows={3}
                     />
                     <div className="flex gap-2">
                       <Button size="sm" onClick={() => handleSaveEdit(service.id)}>
@@ -132,12 +123,11 @@ export const ServicesManager = () => {
                 ) : (
                   <>
                     <h3 className="font-medium text-sm">{service.title}</h3>
-                    <p className="text-xs text-gray-600">{service.description}</p>
                     <div className="flex gap-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleEdit(service.id, service.title, service.description)}
+                        onClick={() => handleEdit(service.id, service.title)}
                       >
                         <Edit size={14} />
                       </Button>
@@ -160,27 +150,25 @@ export const ServicesManager = () => {
   );
 };
 
-// Upload Form Component
+// ✅ Minimal Upload Form
 const PhotoUpload = ({
   onUpload,
 }: {
-  onUpload: (file: File, title: string, description: string) => void;
+  onUpload: (file: File, title: string) => void;
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !title || !description) {
-      alert("All fields are required");
+    if (!file || !title) {
+      alert("Both image and title are required");
       return;
     }
 
-    onUpload(file, title, description);
+    onUpload(file, title.trim());
     setFile(null);
     setTitle("");
-    setDescription("");
   };
 
   return (
@@ -195,16 +183,10 @@ const PhotoUpload = ({
         }}
       />
       <Input
-        type="text"
+        type="title"
         placeholder="Service Title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-      />
-      <Textarea
-        placeholder="Service Description"
-        rows={3}
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
       />
       <Button type="submit">Upload Service</Button>
     </form>
