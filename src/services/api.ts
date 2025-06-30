@@ -243,11 +243,11 @@ export const profileApi = {
 export const recentWorksApi = {
   upload: async (file: File, title: string, category: string) => {
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('file', file);
     formData.append('title', title);
     formData.append('category', category);
 
-    const response = await fetch(`${API_BASE_URL}/recent-works/upload`, {
+    const response = await fetch(`${API_BASE_URL}/recentworks/upload`, {
       method: 'POST',
       body: formData,
     });
@@ -260,7 +260,7 @@ export const recentWorksApi = {
   },
 
   getAll: async () => {
-    const response = await fetch(`${API_BASE_URL}/recent-works`);
+    const response = await fetch(`${API_BASE_URL}/recentworks`);
     if (!response.ok) {
       throw new Error('Failed to fetch recent works');
     }
@@ -268,7 +268,7 @@ export const recentWorksApi = {
   },
 
   getByCategory: async (category: string) => {
-    const response = await fetch(`${API_BASE_URL}/recent-works?category=${category}`);
+    const response = await fetch(`${API_BASE_URL}/recentworks?category=${category}`);
     if (!response.ok) {
       throw new Error('Failed to fetch recent works');
     }
@@ -276,7 +276,7 @@ export const recentWorksApi = {
   },
 
   update: async (id: string, title: string, category: string) => {
-    const response = await fetch(`${API_BASE_URL}/recent-works/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/recentworks/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -292,7 +292,7 @@ export const recentWorksApi = {
   },
 
   delete: async (id: string) => {
-    const response = await fetch(`${API_BASE_URL}/recent-works/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/recentworks/${id}`, {
       method: 'DELETE',
     });
 
