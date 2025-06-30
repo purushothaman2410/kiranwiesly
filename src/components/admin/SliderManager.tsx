@@ -10,7 +10,7 @@ import { sliderApi } from "@/services/api";
 
 interface SliderImage {
   id: string;
-  url: string;
+  base64: string;
   title: string;
 }
 
@@ -25,7 +25,7 @@ const SliderManager = () => {
         const data = await sliderApi.getAll();
         const formatted = data.map((item: any) => ({
           id: item._id,
-          url: item.base64 || item.imageUrl,
+          base64: item.base64 || item.imageUrl,
           title: item.title || item.filename,
         }));
         setSliderImages(formatted);
@@ -38,26 +38,28 @@ const SliderManager = () => {
   }, []);
 
   const handleUpload = async (file: File, title: string) => {
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("title", title);
+  try {
+    const formData = new FormData();
+    formData.append("file", file); // 🔑 must match multer field
+    formData.append("title", title);
 
-      const data = await sliderApi.upload(formData);
+    const data = await sliderApi.upload(formData);
 
-      setSliderImages((prev) => [
-        ...prev,
-        {
-          id: data._id,
-          url: data.base64,
-          title: data.title,
-        },
-      ]);
-    } catch (error) {
-      console.error("Upload error:", error);
-      alert("Upload failed");
-    }
-  };
+    // 🧠 backend returns: base64, _id, title
+    setSliderImages((prev) => [
+      ...prev,
+      {
+        id: data.id || data._id,
+        base64: data.base64, // ✅ show base64 image string
+        title: data.title || file.name,
+      },
+    ]);
+  } catch (error) {
+    console.error("Upload error:", error);
+    alert("Upload failed");
+  }
+};
+
 
   const handleDelete = async (id: string) => {
     try {
@@ -96,7 +98,7 @@ const SliderManager = () => {
           <Card key={image.id} className="overflow-hidden">
             <CardContent className="p-0">
               <img
-                src={image.url}
+                src={image.base64}
                 alt={image.title}
                 className="w-full h-48 object-cover"
               />
