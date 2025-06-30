@@ -14,7 +14,7 @@ export const Services = () => {
 
         const formatted = data.map((item: any) => ({
           id: item._id,
-          url: item.image, // This is the base64 URL from backend
+          url: item.base64, // This is the base64 URL from backend
           title: item.title || "Untitled",
           category: item.category || "Uncategorized",
         }));
@@ -45,7 +45,7 @@ export const Services = () => {
               <CardContent className="p-0">
                 <div className="relative overflow-hidden">
                   <img
-                    src={service.image}
+                    src={service.url}
                     alt={service.title}
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                   />

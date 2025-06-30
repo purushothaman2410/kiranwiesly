@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SliderManager } from "@/components/admin/SliderManager";
+import SliderManager from '@/components/admin/SliderManager';
 import { GalleryManager } from "@/components/admin/GalleryManager";
 import { ServicesManager } from "@/components/admin/ServicesManager";
 import { ProfileManager } from "@/components/admin/ProfileManager";

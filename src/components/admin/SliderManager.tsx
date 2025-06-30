@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { useRef,useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,22 +10,24 @@ interface SliderImage {
   id: string;
   base64: string;
   title: string;
+  url: string;
 }
 
-
-export const SliderManager = ({ onUpload }: { onUpload: (file: File, title: string) => void }) => {
+const SliderManager = () => {
   const [sliderImages, setSliderImages] = useState<SliderImage[]>([]);
   const [editingId, setEditingId] = useState<string>("");
   const [editTitle, setEditTitle] = useState("");
 
+  // Fetch images on mount
   useEffect(() => {
-   const fetchSliderImages = async () => {
+    const fetchSliderImages = async () => {
       try {
         const data = await sliderApi.getAll();
         const formatted = data.map((item: any) => ({
           id: item._id,
           base64: item.base64,
           title: item.title || item.filename,
+          url: item.base64 || item.imageUrl,
         }));
         setSliderImages(formatted);
       } catch (error) {
@@ -37,33 +38,35 @@ export const SliderManager = ({ onUpload }: { onUpload: (file: File, title: stri
     fetchSliderImages();
   }, []);
 
+  // Upload Handler
   const handleUpload = async (file: File, title: string) => {
     try {
       const data = await sliderApi.upload(file, title);
-      setSliderImages(prev => [
-        ...prev,
-        {
-          id: data._id,
-          base64: data.base64, // ✅ use base64 instead of url
-          title: data.title || data.filename, // fallback to filename if title is not present
-        }
-      ]);
+      const newImage: SliderImage = {
+        id: data._id,
+        base64: data.base64,
+        title: data.title || data.filename,
+        url: data.base64,
+      };
+      setSliderImages((prev) => [...prev, newImage]);
     } catch (error) {
       console.error("Upload error:", error);
       alert("Upload failed");
     }
   };
 
+  // Delete Handler
   const handleDelete = async (id: string) => {
     try {
       await sliderApi.delete(id);
-      setSliderImages(sliderImages.filter(img => img.id !== id));
+      setSliderImages((prev) => prev.filter((img) => img.id !== id));
     } catch (error) {
       console.error("Delete error:", error);
       alert("Delete failed");
     }
   };
 
+  // Edit Handlers
   const handleEdit = (id: string, currentTitle: string) => {
     setEditingId(id);
     setEditTitle(currentTitle);
@@ -72,9 +75,9 @@ export const SliderManager = ({ onUpload }: { onUpload: (file: File, title: stri
   const handleSaveEdit = async (id: string) => {
     try {
       await sliderApi.update(id, editTitle);
-      setSliderImages(sliderImages.map(img =>
-        img.id === id ? { ...img, title: editTitle } : img
-      ));
+      setSliderImages((prev) =>
+        prev.map((img) => (img.id === id ? { ...img, title: editTitle } : img))
+      );
       setEditingId("");
       setEditTitle("");
     } catch (error) {
@@ -92,7 +95,7 @@ export const SliderManager = ({ onUpload }: { onUpload: (file: File, title: stri
           <Card key={image.id} className="overflow-hidden">
             <CardContent className="p-0">
               <img
-                src={image.base64}
+                src={image.url}
                 alt={image.title}
                 className="w-full h-48 object-cover"
               />
@@ -108,7 +111,11 @@ export const SliderManager = ({ onUpload }: { onUpload: (file: File, title: stri
                       <Button size="sm" onClick={() => handleSaveEdit(image.id)}>
                         Save
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => setEditingId("")}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingId("")}
+                      >
                         Cancel
                       </Button>
                     </div>
@@ -143,11 +150,18 @@ export const SliderManager = ({ onUpload }: { onUpload: (file: File, title: stri
   );
 };
 
-// Embedded PhotoUpload component
-const PhotoUpload = ({ onUpload }: { onUpload: (file: File, title: string) => void }) => {
+export default SliderManager;
+
+// Photo Upload Form Component
+const PhotoUpload = ({
+  onUpload,
+}: {
+  onUpload: (file: File, title: string) => void;
+}) => {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !title.trim()) {
@@ -160,23 +174,25 @@ const PhotoUpload = ({ onUpload }: { onUpload: (file: File, title: string) => vo
     // Reset form
     setFile(null);
     setTitle("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ""; // reset file input field
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
-
 
   return (
     <form onSubmit={handleSubmit} className="space-y-2">
-      <Input type="file" accept="image/*" ref={fileInputRef} onChange={(e) => {
-        if (e.target.files && e.target.files[0]) {
-          setFile(e.target.files[0]);
-        }
-      }} />
-      <Input placeholder="Enter image title" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <Input
+        type="file"
+        accept="image/*"
+        ref={fileInputRef}
+        onChange={(e) => {
+          if (e.target.files?.[0]) setFile(e.target.files[0]);
+        }}
+      />
+      <Input
+        placeholder="Enter image title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
       <Button type="submit">Upload</Button>
     </form>
   );
 };
-
-export default SliderManager;

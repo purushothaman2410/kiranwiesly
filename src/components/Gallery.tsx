@@ -1,8 +1,20 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useState } from "react";
 
 export const Gallery = () => {
-  const galleryItems =[]
+  const [galleryItems, setGalleryItems] = useState<any[]>([]);
+  useEffect(() => { 
+    const fetchGalleryItems = async () =>
+      {
+        const response = await fetch('http://localhost:5000/api/gallery');
+        const data = await response.json();
+        setGalleryItems(data);
+      }
+      fetchGalleryItems();
+  }
+  , []);
 
   return (
     <section id="gallery" className="py-20 bg-gray-50">

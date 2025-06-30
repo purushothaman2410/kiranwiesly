@@ -1,99 +1,80 @@
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { Trash2, Edit } from "lucide-react";
+import { galleryApi } from "@/services/api";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Edit } from "lucide-react";
-import { galleryApi } from "@/services/api";
 
 interface GalleryImage {
   id: string;
   url: string;
   title: string;
   category: string;
-  description: string;
 }
 
 export const GalleryManager = () => {
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [editingId, setEditingId] = useState<string>("");
-
   const [editTitle, setEditTitle] = useState("");
   const [editCategory, setEditCategory] = useState("");
-  const [editDescription, setEditDescription] = useState("");
-
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   const categories = ["Nature", "Wedding", "Fashion", "Babies", "Couples"];
 
-  // Fetch images on mount
   useEffect(() => {
-    const fetchImages = async () => {
+    const fetchGalleryImages = async () => {
       try {
-        const data = selectedCategory 
-          ? await galleryApi.getByCategory(selectedCategory)
-          : await galleryApi.getAll();
-        
-        const formatted = data.map((img: any) => ({
-          id: img._id,
-          title: img.title,
-          category: img.category,
-          description: img.description,
-          url: img.url
+        const data = await galleryApi.getAll(); 
+        const formatted = data.map((item: any) => ({
+          id: item._id,
+          url: item.base64 || item.imageUrl,
+          title: item.title || item.filename,
+          category: item.category || "Uncategorized",
         }));
         setGalleryImages(formatted);
       } catch (error) {
-        console.error("Failed to fetch images:", error);
+        console.error("Failed to load gallery images:", error);
       }
     };
-    fetchImages();
-  }, [selectedCategory]);
+    fetchGalleryImages();
+  }, []);
 
-  // Upload new image
-  const handleUpload = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const file = fileRef.current?.files?.[0];
-
-    if (!file || !title || !category || !description) {
-      alert("All fields are required.");
-      return;
-    }
-
+  const handleUpload = async (file: File, title: string, category: string) => {
     try {
-      const data = await galleryApi.upload(file, title, category);
-      
-      const newImage: GalleryImage = {
-        id: data._id,
-        url: data.url,
-        title: data.title,
-        category: data.category,
-        description: data.description,
-      };
-      
-      setGalleryImages((prev) => [...prev, newImage]);
-      setTitle("");
-      setDescription("");
-      setCategory("");
-      if (fileRef.current) fileRef.current.value = "";
+      const formData = new FormData();
+      formData.append("image", file); // ✅ Make sure backend expects 'image'
+      formData.append("title", title);
+      formData.append("category", category);
+
+      const data = await galleryApi.upload(formData);
+
+      setGalleryImages((prev) => [
+        ...prev,
+        {
+          id: data._id,
+          url: data.base64,
+          title: data.title,
+          category: data.category,
+        },
+      ]);
     } catch (error) {
       console.error("Upload error:", error);
       alert("Upload failed");
     }
   };
 
-  // Delete image
   const handleDelete = async (id: string) => {
     try {
       await galleryApi.delete(id);
@@ -104,49 +85,49 @@ export const GalleryManager = () => {
     }
   };
 
-  // Start editing
-  const handleEdit = (id: string, currentTitle: string, currentCategory: string, currentDescription: string) => {
+  const handleEdit = (id: string, currentTitle: string, currentCategory: string) => {
     setEditingId(id);
     setEditTitle(currentTitle);
     setEditCategory(currentCategory);
-    setEditDescription(currentDescription);
   };
 
-  // Save edit
   const handleSaveEdit = async (id: string) => {
     try {
       const data = await galleryApi.update(id, editTitle, editCategory);
-      
       setGalleryImages((prev) =>
         prev.map((img) =>
           img.id === id
-            ? { ...img, title: data.title, category: data.category, description: data.description }
+            ? { ...img, title: data.title, category: data.category }
             : img
         )
       );
-
       setEditingId("");
       setEditTitle("");
       setEditCategory("");
-      setEditDescription("");
     } catch (error) {
       console.error("Update error:", error);
       alert("Failed to update image");
     }
   };
 
+  const filteredImages = selectedCategory && selectedCategory !== "all"
+    ? galleryImages.filter((img) => img.category === selectedCategory)
+    : galleryImages;
+
   return (
     <div className="space-y-6 p-4">
-      {/* Filter by Category */}
+      {/* Filter */}
       <div className="flex gap-4 items-center">
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Filter by category" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Categories</SelectItem>
+            <SelectItem value="all">All Categories</SelectItem>
             {categories.map((cat) => (
-              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              <SelectItem key={cat} value={cat}>
+                {cat}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -155,8 +136,22 @@ export const GalleryManager = () => {
         </Button>
       </div>
 
-      {/* Upload Form */}
-      <form onSubmit={handleUpload} className="flex flex-col gap-2 md:flex-row md:items-end">
+      {/* Upload */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const file = fileRef.current?.files?.[0];
+          if (!file || !title || !category) {
+            alert("All fields are required");
+            return;
+          }
+          handleUpload(file, title, category);
+          setTitle("");
+          setCategory("");
+          if (fileRef.current) fileRef.current.value = "";
+        }}
+        className="flex flex-col gap-2 md:flex-row md:items-end"
+      >
         <Input
           type="text"
           placeholder="Title"
@@ -164,30 +159,27 @@ export const GalleryManager = () => {
           onChange={(e) => setTitle(e.target.value)}
           className="md:w-1/4"
         />
-        <Input
-          type="text"
-          placeholder="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="md:w-1/4"
-        />
         <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger className="md:w-1/4">
+          <SelectTrigger className="w-48">
             <SelectValue placeholder="Select category" />
           </SelectTrigger>
           <SelectContent>
             {categories.map((cat) => (
-              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              <SelectItem key={cat} value={cat}>
+                {cat}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Input type="file" ref={fileRef} accept="image/*" className="md:w-1/4" />
-        <Button type="submit" className="md:w-fit">Upload</Button>
+        <Button type="submit" className="md:w-fit">
+          Upload
+        </Button>
       </form>
 
-      {/* Gallery Display */}
+      {/* Gallery */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {galleryImages.map((image) => (
+        {filteredImages.map((image) => (
           <Card key={image.id} className="overflow-hidden">
             <CardContent className="p-0">
               <img
@@ -204,19 +196,15 @@ export const GalleryManager = () => {
                       placeholder="Title"
                       className="text-sm"
                     />
-                    <Input
-                      value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
-                      placeholder="Description"
-                      className="text-sm"
-                    />
                     <Select value={editCategory} onValueChange={setEditCategory}>
                       <SelectTrigger className="text-sm">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((cat) => (
-                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -233,14 +221,11 @@ export const GalleryManager = () => {
                   <>
                     <h3 className="font-medium text-sm">{image.title}</h3>
                     <p className="text-xs text-gray-600">{image.category}</p>
-                    <p className="text-xs italic text-gray-500">{image.description}</p>
                     <div className="flex gap-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() =>
-                          handleEdit(image.id, image.title, image.category, image.description)
-                        }
+                        onClick={() => handleEdit(image.id, image.title, image.category)}
                       >
                         <Edit size={14} />
                       </Button>
