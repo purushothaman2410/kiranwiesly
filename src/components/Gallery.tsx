@@ -5,10 +5,12 @@ import { useEffect, useState } from "react";
 
 export const Gallery = () => {
   const [galleryItems, setGalleryItems] = useState<any[]>([]);
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL; // Adjust this based on your API endpoint
+
   useEffect(() => { 
     const fetchGalleryItems = async () =>
       {
-        const response = await fetch('http://localhost:5000/api/gallery');
+        const response = await fetch(`${API_BASE_URL}/gallery`); // Adjust the endpoint as needed
         const data = await response.json();
         setGalleryItems(data);
       }

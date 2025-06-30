@@ -8,11 +8,11 @@ import { useEffect, useState } from "react";
 const SlidingBackground = () => {
   const [images, setImages] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL; // Adjust this based on your API endpoint
   useEffect(() => {
     const fetchSliderImages = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/sliders");
+        const res = await fetch(`${API_BASE_URL}/sliders`); // Adjust the endpoint as needed
         const data = await res.json();
         const urls = data.map((img: any) => img.base64 || img.imageUrl); // Adjust based on your API response
         setImages(urls);
