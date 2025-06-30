@@ -56,8 +56,9 @@ export const Services = () => {
                   </div>
                 </div>
                 <div className="p-4">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{service.title}</h3>
-                  <p className="text-gray-600 text-sm">{service.description}</p>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    {service.title.replace(/\.[^/.]+$/, '')}
+                  </h3>
                 </div>
               </CardContent>
             </Card>
