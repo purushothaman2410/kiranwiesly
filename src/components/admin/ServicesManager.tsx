@@ -1,6 +1,5 @@
-
-import { useState } from "react";
-import { PhotoUpload } from "./PhotoUpload";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,51 +14,89 @@ interface Service {
 }
 
 export const ServicesManager = () => {
-  const [services, setServices] = useState<Service[]>([
-    {
-      id: "1",
-      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224032/cm1_gkgutf.jpg",
-      title: "Christian Wedding",
-      description: "Complete Christian wedding photography and videography services"
-    },
-    {
-      id: "2",
-      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224049/hm3_povm3o.jpg",
-      title: "Hindu Wedding",
-      description: "Traditional Hindu wedding ceremonies captured beautifully"
-    }
-  ]);
+  const [services, setServices] = useState<Service[]>([]);
   const [editingId, setEditingId] = useState<string>("");
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
 
-  const handleUpload = (file: File, title: string) => {
-    const newService: Service = {
-      id: Date.now().toString(),
-      image: URL.createObjectURL(file),
-      title: title,
-      description: "Service description..."
-    };
-    setServices([...services, newService]);
+  // ✅ Fetch services from backend on mount
+  useEffect(() => {
+    fetch("http://localhost:5000/api/services")
+      .then(res => res.json())
+      .then(data => {
+        const formatted = data.map((item: any) => ({
+          id: item._id,
+          image: item.url,
+          title: item.title,
+          description: item.description,
+        }));
+        setServices(formatted);
+      });
+  }, []);
+
+  // ✅ Upload service image + title + description
+  const handleUpload = async (file: File, title: string, description: string) => {
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("title", title);
+    formData.append("description", description);
+
+    try {
+      const res = await fetch("http://localhost:5000/api/services/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+
+      const data = await res.json();
+      setServices(prev => [...prev, {
+        id: data._id,
+        image: data.url,
+        title: data.title,
+        description: data.description,
+      }]);
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("Upload failed");
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setServices(services.filter(service => service.id !== id));
+  // ✅ Delete service by ID
+  const handleDelete = async (id: string) => {
+    const res = await fetch(`http://localhost:5000/api/services/${id}`, {
+      method: "DELETE",
+    });
+
+    if (res.ok) {
+      setServices(services.filter(service => service.id !== id));
+    }
+  };
+
+  // ✅ Save title & description changes
+  const handleSaveEdit = async (id: string) => {
+    const res = await fetch(`http://localhost:5000/api/services/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: editTitle, description: editDescription }),
+    });
+
+    if (res.ok) {
+      setServices(services.map(service =>
+        service.id === id
+          ? { ...service, title: editTitle, description: editDescription }
+          : service
+      ));
+      setEditingId("");
+      setEditTitle("");
+      setEditDescription("");
+    }
   };
 
   const handleEdit = (id: string, currentTitle: string, currentDescription: string) => {
     setEditingId(id);
     setEditTitle(currentTitle);
     setEditDescription(currentDescription);
-  };
-
-  const handleSaveEdit = (id: string) => {
-    setServices(services.map(service =>
-      service.id === id ? { ...service, title: editTitle, description: editDescription } : service
-    ));
-    setEditingId("");
-    setEditTitle("");
-    setEditDescription("");
   };
 
   return (
@@ -130,3 +167,55 @@ export const ServicesManager = () => {
     </div>
   );
 };
+
+// ✅ Upload Form Component
+const PhotoUpload = ({
+  onUpload,
+}: {
+  onUpload: (file: File, title: string, description: string) => void;
+}) => {
+  const [file, setFile] = useState<File | null>(null);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!file || !title || !description) {
+      alert("All fields are required");
+      return;
+    }
+
+    onUpload(file, title, description);
+    setFile(null);
+    setTitle("");
+    setDescription("");
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-2">
+      <Input
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          if (e.target.files && e.target.files[0]) {
+            setFile(e.target.files[0]);
+          }
+        }}
+      />
+      <Input
+        type="text"
+        placeholder="Service Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
+      <Textarea
+        placeholder="Service Description"
+        rows={3}
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+      />
+      <Button type="submit">Upload Service</Button>
+    </form>
+  );
+};
+

@@ -47,7 +47,7 @@ export const Portfolio = () => {
           <p className="text-xl text-gray-600">Showcasing our latest photography and videography projects</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           {portfolioItems.map((item, index) => (
             <Card key={index} className="group overflow-hidden hover:shadow-2xl transition-all duration-500">
               <CardContent className="p-0">
