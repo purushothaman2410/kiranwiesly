@@ -39,7 +39,7 @@ export const GalleryManager = () => {
         const data = await galleryApi.getAll(); 
         const formatted = data.map((item: any) => ({
           id: item._id,
-          url: item.base64 || item.imageUrl,
+          url: item.base64 || item.image,
           title: item.title || item.filename,
           category: item.category || "Uncategorized",
         }));
