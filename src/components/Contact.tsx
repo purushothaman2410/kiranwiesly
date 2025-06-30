@@ -42,7 +42,11 @@ export const Contact = () => {
                     <div>
                       <h4 className="font-bold text-white">Address</h4>
                       <p className="text-gray-300">
-                        Pedda Gopuram Road, WHY NOT opp, Palakollu, W.G Dist, Andhra Pradesh, 534260
+                        Dasari Apartments,
+                        1st floor 
+                        Opp London Kidz School ,
+                        Near Aditya Jr College,
+                        Parvathi Nagar, Brodipet, Palakollu, Andhra Pradesh 534260
                       </p>
                     </div>
                   </div>
