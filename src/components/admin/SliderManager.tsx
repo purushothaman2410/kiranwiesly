@@ -10,7 +10,7 @@ import { sliderApi } from "@/services/api";
 
 interface SliderImage {
   id: string;
-  base64: string;
+  url: string;
   title: string;
 }
 
@@ -25,7 +25,7 @@ const SliderManager = () => {
         const data = await sliderApi.getAll();
         const formatted = data.map((item: any) => ({
           id: item._id,
-          base64: item.base64 || item.imageUrl,
+          url: item.base64 || item.image,
           title: item.title || item.filename,
         }));
         setSliderImages(formatted);
@@ -37,29 +37,27 @@ const SliderManager = () => {
     fetchSliderImages();
   }, []);
 
-  const handleUpload = async (file: File, title: string) => {
-  try {
-    const formData = new FormData();
-    formData.append("file", file); // 🔑 must match multer field
-    formData.append("title", title);
-
-    const data = await sliderApi.upload(formData);
-
-    // 🧠 backend returns: base64, _id, title
-    setSliderImages((prev) => [
-      ...prev,
-      {
-        id: data.id || data._id,
-        base64: data.base64, // ✅ show base64 image string
-        title: data.title || file.name,
-      },
-    ]);
-  } catch (error) {
-    console.error("Upload error:", error);
-    alert("Upload failed");
-  }
-};
-
+ const handleUpload = async (file: File, title: string) => {
+       try {
+         const formData = new FormData();
+         formData.append("file", file); // ✅ Make sure backend expects 'image'
+         formData.append("title", title);
+   
+         const data = await sliderApi.upload(file, title);
+   
+         setSliderImages((prev) => [
+           ...prev,
+           {
+             id: data._id,
+             url: data.base64,
+             title: data.title,
+           },
+         ]);
+       } catch (error) {
+         console.error("Upload error:", error);
+         alert("Upload failed");
+       }
+     };
 
   const handleDelete = async (id: string) => {
     try {
@@ -98,7 +96,7 @@ const SliderManager = () => {
           <Card key={image.id} className="overflow-hidden">
             <CardContent className="p-0">
               <img
-                src={image.base64}
+                src={image.url}
                 alt={image.title}
                 className="w-full h-48 object-cover"
               />
@@ -149,22 +147,24 @@ const SliderManager = () => {
 };
 
 // Embedded PhotoUpload Component
-const PhotoUpload = ({ onUpload }: { onUpload: (file: File, title: string) => void }) => {
+const PhotoUpload = ({
+  onUpload,
+}: {
+  onUpload: (file: File, title: string) => void;
+}) => {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !title.trim()) {
-      alert("Please select image and enter title");
+    if (!file || !title) {
+      alert("Both image and title are required");
       return;
     }
 
-    onUpload(file, title);
+    onUpload(file, title.trim());
     setFile(null);
     setTitle("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
@@ -172,7 +172,6 @@ const PhotoUpload = ({ onUpload }: { onUpload: (file: File, title: string) => vo
       <Input
         type="file"
         accept="image/*"
-        ref={fileInputRef}
         onChange={(e) => {
           if (e.target.files && e.target.files[0]) {
             setFile(e.target.files[0]);
@@ -180,13 +179,13 @@ const PhotoUpload = ({ onUpload }: { onUpload: (file: File, title: string) => vo
         }}
       />
       <Input
-        placeholder="Enter image title"
+        type="text"
+        placeholder="Slider Title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
-      <Button type="submit">Upload</Button>
+      <Button type="submit">Upload Sliders</Button>
     </form>
   );
 };
-
 export default SliderManager;
