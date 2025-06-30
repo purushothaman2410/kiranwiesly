@@ -1,22 +1,36 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from "@/components/ui/button";
 import { Camera, Instagram, Youtube } from "lucide-react";
 import { TextAnimation } from "./TextAnimation";
 import { useEffect, useState } from "react";
 
+// ✅ Sliding Background with API-based image fetching
 const SlidingBackground = () => {
-  const images = [
-    "https://res.cloudinary.com/dqopsgfom/image/upload/v1749223874/k3_yhuz4f.jpg",
-    "/lovable-uploads/6f37b9ce-23f4-441a-b80a-f2b85bf2ebc1.png"
-  ];
-
+  const [images, setImages] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
+    const fetchSliderImages = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/sliders");
+        const data = await res.json();
+        const urls = data.map((img: any) => img.url);
+        setImages(urls);
+      } catch (error) {
+        console.error("Failed to load slider images:", error);
+      }
+    };
+
+    fetchSliderImages();
+  }, []);
+
+  useEffect(() => {
+    if (images.length === 0) return;
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
     }, 5000); // every 5s
     return () => clearInterval(interval);
-  }, []);
+  }, [images]);
 
   return (
     <div className="absolute inset-0">
@@ -37,7 +51,7 @@ const SlidingBackground = () => {
   );
 };
 
-
+// ✅ Hero Section
 export const Hero = () => {
   const handleWhatsApp = () => {
     window.open("https://wa.me/9573938313/?text=Hello%2C%20how%20are%20you%3F", "_blank");
