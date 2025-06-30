@@ -6,7 +6,7 @@ export const galleryApi = {
   // Upload image with title and category
   upload: async (file: File, title: string, category: string) => {
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('file', file);
     formData.append('title', title);
     formData.append('category', category);
 
@@ -75,7 +75,7 @@ export const galleryApi = {
 export const sliderApi = {
   upload: async (file: File, title: string) => {
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('file', file);
     formData.append('title', title);
 
     const response = await fetch(`${API_BASE_URL}/sliders/upload`, {

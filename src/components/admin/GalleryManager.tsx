@@ -54,11 +54,11 @@ export const GalleryManager = () => {
   const handleUpload = async (file: File, title: string, category: string) => {
     try {
       const formData = new FormData();
-      formData.append("image", file); // ✅ Make sure backend expects 'image'
+      formData.append("file", file); // ✅ Make sure backend expects 'image'
       formData.append("title", title);
       formData.append("category", category);
 
-      const data = await galleryApi.upload(formData);
+      const data = await galleryApi.upload(file, title, category);
 
       setGalleryImages((prev) => [
         ...prev,

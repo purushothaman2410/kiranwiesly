@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useRef, useEffect, useState } from "react";
+// File: SliderManager.tsx
+
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,9 +10,8 @@ import { sliderApi } from "@/services/api";
 
 interface SliderImage {
   id: string;
-  base64: string;
-  title: string;
   url: string;
+  title: string;
 }
 
 const SliderManager = () => {
@@ -18,16 +19,14 @@ const SliderManager = () => {
   const [editingId, setEditingId] = useState<string>("");
   const [editTitle, setEditTitle] = useState("");
 
-  // Fetch images on mount
   useEffect(() => {
     const fetchSliderImages = async () => {
       try {
         const data = await sliderApi.getAll();
         const formatted = data.map((item: any) => ({
           id: item._id,
-          base64: item.base64,
-          title: item.title || item.filename,
           url: item.base64 || item.imageUrl,
+          title: item.title || item.filename,
         }));
         setSliderImages(formatted);
       } catch (error) {
@@ -38,24 +37,28 @@ const SliderManager = () => {
     fetchSliderImages();
   }, []);
 
-  // Upload Handler
   const handleUpload = async (file: File, title: string) => {
     try {
-      const data = await sliderApi.upload(file, title);
-      const newImage: SliderImage = {
-        id: data._id,
-        base64: data.base64,
-        title: data.title || data.filename,
-        url: data.base64,
-      };
-      setSliderImages((prev) => [...prev, newImage]);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("title", title);
+
+      const data = await sliderApi.upload(formData);
+
+      setSliderImages((prev) => [
+        ...prev,
+        {
+          id: data._id,
+          url: data.base64,
+          title: data.title,
+        },
+      ]);
     } catch (error) {
       console.error("Upload error:", error);
       alert("Upload failed");
     }
   };
 
-  // Delete Handler
   const handleDelete = async (id: string) => {
     try {
       await sliderApi.delete(id);
@@ -66,7 +69,6 @@ const SliderManager = () => {
     }
   };
 
-  // Edit Handlers
   const handleEdit = (id: string, currentTitle: string) => {
     setEditingId(id);
     setEditTitle(currentTitle);
@@ -89,7 +91,6 @@ const SliderManager = () => {
   return (
     <div className="space-y-6">
       <PhotoUpload onUpload={handleUpload} />
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sliderImages.map((image) => (
           <Card key={image.id} className="overflow-hidden">
@@ -105,17 +106,12 @@ const SliderManager = () => {
                     <Input
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
-                      className="text-sm"
                     />
                     <div className="flex gap-2">
                       <Button size="sm" onClick={() => handleSaveEdit(image.id)}>
                         Save
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setEditingId("")}
-                      >
+                      <Button size="sm" variant="outline" onClick={() => setEditingId("")}>
                         Cancel
                       </Button>
                     </div>
@@ -150,14 +146,8 @@ const SliderManager = () => {
   );
 };
 
-export default SliderManager;
-
-// Photo Upload Form Component
-export const PhotoUpload = ({
-  onUpload,
-}: {
-  onUpload: (file: File, title: string) => void;
-}) => {
+// Embedded PhotoUpload Component
+const PhotoUpload = ({ onUpload }: { onUpload: (file: File, title: string) => void }) => {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -165,13 +155,11 @@ export const PhotoUpload = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !title.trim()) {
-      alert("Please select an image and enter a title");
+      alert("Please select image and enter title");
       return;
     }
 
-    onUpload(file, title.trim());
-
-    // Reset form
+    onUpload(file, title);
     setFile(null);
     setTitle("");
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -184,7 +172,9 @@ export const PhotoUpload = ({
         accept="image/*"
         ref={fileInputRef}
         onChange={(e) => {
-          if (e.target.files?.[0]) setFile(e.target.files[0]);
+          if (e.target.files && e.target.files[0]) {
+            setFile(e.target.files[0]);
+          }
         }}
       />
       <Input
@@ -196,3 +186,5 @@ export const PhotoUpload = ({
     </form>
   );
 };
+
+export default SliderManager;
