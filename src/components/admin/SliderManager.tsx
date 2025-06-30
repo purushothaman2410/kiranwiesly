@@ -1,3 +1,4 @@
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // File: SliderManager.tsx
 
@@ -23,41 +24,46 @@ const SliderManager = () => {
     const fetchSliderImages = async () => {
       try {
         const data = await sliderApi.getAll();
-        const formatted = data.map((item: any) => ({
-          id: item._id,
-          url: item.base64 || item.image,
-          title: item.title || item.filename,
+        console.log("Slider API response:", data);
+        
+        // Handle both array and object responses
+        const imageArray = Array.isArray(data) ? data : (data.data || []);
+        
+        const formatted = imageArray.map((item: any) => ({
+          id: item._id || item.id,
+          url: item.base64 || item.image || item.url,
+          title: item.title || item.filename || 'Untitled',
         }));
+        
         setSliderImages(formatted);
       } catch (error) {
         console.error("Failed to load slider images:", error);
+        setSliderImages([]); // Set empty array on error
       }
     };
 
     fetchSliderImages();
   }, []);
 
- const handleUpload = async (file: File, title: string) => {
-       try {
-         const formData = new FormData();
-         formData.append("file", file); // ✅ Make sure backend expects 'image'
-         formData.append("title", title);
-   
-         const data = await sliderApi.upload(file, title);
-   
-         setSliderImages((prev) => [
-           ...prev,
-           {
-             id: data._id,
-             url: data.base64,
-             title: data.title,
-           },
-         ]);
-       } catch (error) {
-         console.error("Upload error:", error);
-         alert("Upload failed");
-       }
-     };
+  const handleUpload = async (file: File, title: string) => {
+    try {
+      console.log("Uploading slider image:", { file: file.name, title });
+      
+      const data = await sliderApi.upload(file, title);
+      console.log("Upload response:", data);
+
+      const newImage = {
+        id: data._id || data.id,
+        url: data.base64 || data.image || data.url,
+        title: data.title || title,
+      };
+
+      setSliderImages((prev) => [...prev, newImage]);
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("Upload failed. Please try again.");
+    }
+  };
 
   const handleDelete = async (id: string) => {
     try {
@@ -154,6 +160,7 @@ const PhotoUpload = ({
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,11 +172,17 @@ const PhotoUpload = ({
     onUpload(file, title.trim());
     setFile(null);
     setTitle("");
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-2">
       <Input
+        ref={fileInputRef}
         type="file"
         accept="image/*"
         onChange={(e) => {
@@ -184,8 +197,9 @@ const PhotoUpload = ({
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
-      <Button type="submit">Upload Sliders</Button>
+      <Button type="submit">Upload Slider</Button>
     </form>
   );
 };
+
 export default SliderManager;
