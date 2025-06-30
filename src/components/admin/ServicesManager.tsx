@@ -42,7 +42,7 @@ export const ServicesManager = () => {
       formData.append("file", file);
       formData.append("title", title);
 
-      const data = await servicesApi.upload(formData);
+      const data = await servicesApi.upload(file , title);
 
       setServicesImages(prev => [
         ...prev,
@@ -183,7 +183,7 @@ const PhotoUpload = ({
         }}
       />
       <Input
-        type="file"
+        type="text"
         placeholder="Service Title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}

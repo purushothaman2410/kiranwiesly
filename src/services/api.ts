@@ -129,11 +129,10 @@ export const sliderApi = {
 
 // Services API
 export const servicesApi = {
-  upload: async (file: File, title: string, description: string) => {
+  upload: async (file: File, title: string) => {
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('file', file);
     formData.append('title', title);
-    formData.append('description', description);
 
     const response = await fetch(`${API_BASE_URL}/services/upload`, {
       method: 'POST',
@@ -155,13 +154,13 @@ export const servicesApi = {
     return response.json();
   },
 
-  update: async (id: string, title: string, description: string) => {
+  update: async (id: string, title: string) => {
     const response = await fetch(`${API_BASE_URL}/services/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ title, description }),
+      body: JSON.stringify({ title }),
     });
 
     if (!response.ok) {
