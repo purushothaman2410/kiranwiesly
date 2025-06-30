@@ -3,30 +3,27 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { servicesApi } from "@/services/api";
 
 export const Services = () => {
   const [services, setServicesImages] = useState<any[]>([]);
   useEffect(() => {
-    const fetchImages = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/gallery"); // replace with your actual API URL
-        const data = await res.json();
-
-        const formatted = data.map((item: any) => ({
-          id: item._id,
-          url: item.base64, // This is the base64 URL from backend
-          title: item.title || "Untitled",
-          category: item.category || "Uncategorized",
-        }));
-
-        setServicesImages(formatted);
-      } catch (error) {
-        console.error("Failed to fetch gallery:", error);
-      }
-    };
-
-    fetchImages();
-  }, []);
+      const fetchServicesImages = async () => {
+        try {
+          const data = await servicesApi.getAll();
+          const formatted = data.map((item: any) => ({
+            id: item._id,
+            base64: item.base64, // backend sends base64 field
+            title: item.title || item.filename,
+          }));
+          setServicesImages(formatted);
+        } catch (error) {
+          console.error("Failed to load services:", error);
+        }
+      };
+      fetchServicesImages();
+    }, []);
+  
   const handleWhatsApp = () => {
     window.open("https://wa.me/9573938313/?text=Hello%2C%20how%20are%20you%3F", "_blank");
   };
@@ -45,7 +42,7 @@ export const Services = () => {
               <CardContent className="p-0">
                 <div className="relative overflow-hidden">
                   <img
-                    src={service.url}
+                    src={service.base64}
                     alt={service.title}
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                   />
