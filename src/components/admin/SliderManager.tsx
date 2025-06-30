@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useEffect, useState } from "react";
+import { useRef,useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +13,7 @@ interface SliderImage {
   title: string;
 }
 
-export const SliderManager = () => {
+export const SliderManager = ({ onUpload }: { onUpload: (file: File, title: string) => void }) => {
   const [sliderImages, setSliderImages] = useState<SliderImage[]>([]);
   const [editingId, setEditingId] = useState<string>("");
   const [editTitle, setEditTitle] = useState("");
@@ -143,18 +143,28 @@ export const SliderManager = () => {
 const PhotoUpload = ({ onUpload }: { onUpload: (file: File, title: string) => void }) => {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
-
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !title) return alert("Please select image and title");
-    onUpload(file, title);
+    if (!file || !title.trim()) {
+      alert("Please select an image and enter a title");
+      return;
+    }
+
+    onUpload(file, title.trim());
+
+    // Reset form
     setFile(null);
     setTitle("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""; // reset file input field
+    }
   };
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-2">
-      <Input type="file" accept="image/*" onChange={(e) => {
+      <Input type="file" accept="image/*" ref={fileInputRef} onChange={(e) => {
         if (e.target.files && e.target.files[0]) {
           setFile(e.target.files[0]);
         }
