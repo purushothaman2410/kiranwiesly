@@ -152,7 +152,7 @@ const SliderManager = () => {
   );
 };
 
-// Embedded PhotoUpload Component
+// Embedded PhotoUpload Component for Slider
 const PhotoUpload = ({
   onUpload,
 }: {
@@ -160,45 +160,63 @@ const PhotoUpload = ({
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !title) {
+    if (!file || !title.trim()) {
       alert("Both image and title are required");
       return;
     }
 
-    onUpload(file, title.trim());
-    setFile(null);
-    setTitle("");
-    
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+    setIsUploading(true);
+    try {
+      await onUpload(file, title.trim());
+      setFile(null);
+      setTitle("");
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch (error) {
+      console.error("Upload failed:", error);
+    } finally {
+      setIsUploading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2">
-      <Input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={(e) => {
-          if (e.target.files && e.target.files[0]) {
-            setFile(e.target.files[0]);
-          }
-        }}
-      />
-      <Input
-        type="text"
-        placeholder="Slider Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-      <Button type="submit">Upload Slider</Button>
-    </form>
+    <Card className="p-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              if (e.target.files && e.target.files[0]) {
+                setFile(e.target.files[0]);
+              }
+            }}
+            required
+          />
+        </div>
+        <div>
+          <Input
+            type="text"
+            placeholder="Slider Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+        </div>
+        <Button type="submit" disabled={isUploading} className="w-full">
+          {isUploading ? "Uploading..." : "Upload Slider"}
+        </Button>
+      </form>
+    </Card>
   );
 };
 

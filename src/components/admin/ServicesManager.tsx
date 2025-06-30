@@ -1,5 +1,6 @@
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +14,7 @@ interface Service {
 }
 
 export const ServicesManager = () => {
-  const [services, setServicesImages] = useState<Service[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [editingId, setEditingId] = useState<string>("");
   const [editTitle, setEditTitle] = useState("");
 
@@ -22,14 +23,17 @@ export const ServicesManager = () => {
     const fetchServicesImages = async () => {
       try {
         const data = await servicesApi.getAll();
+        console.log("Services API response:", data);
+        
         const formatted = data.map((item: any) => ({
-          id: item._id,
-          base64: item.base64, // backend sends base64 field
-          title: item.title || item.filename,
+          id: item._id || item.id,
+          base64: item.base64 || item.image || item.url,
+          title: item.title || item.filename || 'Untitled',
         }));
-        setServicesImages(formatted);
+        setServices(formatted);
       } catch (error) {
         console.error("Failed to load services:", error);
+        setServices([]);
       }
     };
     fetchServicesImages();
@@ -38,30 +42,29 @@ export const ServicesManager = () => {
   // Upload service image + title
   const handleUpload = async (file: File, title: string) => {
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("title", title);
+      console.log("Uploading service:", { file: file.name, title });
+      
+      const data = await servicesApi.upload(file, title);
+      console.log("Service upload response:", data);
 
-      const data = await servicesApi.upload(file , title);
-
-      setServicesImages(prev => [
+      setServices(prev => [
         ...prev,
         {
-          id: data.id || data._id,
-          base64: data.base64,
+          id: data._id || data.id,
+          base64: data.base64 || data.image || data.url,
           title: data.title || data.filename || title,
         },
       ]);
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Upload failed");
+      alert("Upload failed. Please try again.");
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
       await servicesApi.delete(id);
-      setServicesImages(prev => prev.filter(service => service.id !== id));
+      setServices(prev => prev.filter(service => service.id !== id));
     } catch (error) {
       console.error("Delete error:", error);
       alert("Delete failed");
@@ -71,7 +74,7 @@ export const ServicesManager = () => {
   const handleSaveEdit = async (id: string) => {
     try {
       await servicesApi.update(id, editTitle);
-      setServicesImages(prev =>
+      setServices(prev =>
         prev.map(service =>
           service.id === id ? { ...service, title: editTitle } : service
         )
@@ -150,7 +153,7 @@ export const ServicesManager = () => {
   );
 };
 
-// ✅ Minimal Upload Form
+// Upload Form Component for Services
 const PhotoUpload = ({
   onUpload,
 }: {
@@ -158,37 +161,62 @@ const PhotoUpload = ({
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !title) {
+    if (!file || !title.trim()) {
       alert("Both image and title are required");
       return;
     }
 
-    onUpload(file, title.trim());
-    setFile(null);
-    setTitle("");
+    setIsUploading(true);
+    try {
+      await onUpload(file, title.trim());
+      setFile(null);
+      setTitle("");
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch (error) {
+      console.error("Upload failed:", error);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2">
-      <Input
-        type="file"
-        accept="image/*"
-        onChange={(e) => {
-          if (e.target.files && e.target.files[0]) {
-            setFile(e.target.files[0]);
-          }
-        }}
-      />
-      <Input
-        type="text"
-        placeholder="Service Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-      <Button type="submit">Upload Service</Button>
-    </form>
+    <Card className="p-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              if (e.target.files && e.target.files[0]) {
+                setFile(e.target.files[0]);
+              }
+            }}
+            required
+          />
+        </div>
+        <div>
+          <Input
+            type="text"
+            placeholder="Service Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+        </div>
+        <Button type="submit" disabled={isUploading} className="w-full">
+          {isUploading ? "Uploading..." : "Upload Service"}
+        </Button>
+      </form>
+    </Card>
   );
 };
