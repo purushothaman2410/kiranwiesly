@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Trash2, Edit } from "lucide-react";
+import { profileApi } from "@/services/api";
 
 interface ProfileImage {
   id: string;
@@ -16,35 +17,29 @@ export const ProfileManager = () => {
   const [editingId, setEditingId] = useState<string>("");
   const [editTitle, setEditTitle] = useState("");
 
-  // ✅ Load all profiles on mount
+  // Load all profiles on mount
   useEffect(() => {
-    fetch("http://localhost:5000/api/profiles")
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchProfiles = async () => {
+      try {
+        const data = await profileApi.getAll();
         const formatted = data.map((item: any) => ({
           id: item._id,
           url: item.url,
           title: item.title,
         }));
         setProfileImages(formatted);
-      });
+      } catch (error) {
+        console.error("Failed to fetch profiles:", error);
+      }
+    };
+
+    fetchProfiles();
   }, []);
 
-  // ✅ Upload a new profile
+  // Upload a new profile
   const handleUpload = async (file: File, title: string) => {
-    const formData = new FormData();
-    formData.append("image", file);
-    formData.append("title", title);
-
     try {
-      const res = await fetch("http://localhost:5000/api/profiles/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error("Upload failed");
-
-      const data = await res.json();
+      const data = await profileApi.upload(file, title);
       setProfileImages((prev) => [
         ...prev,
         { id: data._id, url: data.url, title: data.title },
@@ -55,28 +50,21 @@ export const ProfileManager = () => {
     }
   };
 
-  // ✅ Delete profile
+  // Delete profile
   const handleDelete = async (id: string) => {
-    const res = await fetch(`http://localhost:5000/api/profiles/${id}`, {
-      method: "DELETE",
-    });
-
-    if (res.ok) {
+    try {
+      await profileApi.delete(id);
       setProfileImages(profileImages.filter((img) => img.id !== id));
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Delete failed");
     }
   };
 
-  // ✅ Edit title
+  // Edit title
   const handleSaveEdit = async (id: string) => {
-    const res = await fetch(`http://localhost:5000/api/profiles/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ title: editTitle }),
-    });
-
-    if (res.ok) {
+    try {
+      await profileApi.update(id, editTitle);
       setProfileImages((prev) =>
         prev.map((img) =>
           img.id === id ? { ...img, title: editTitle } : img
@@ -84,6 +72,9 @@ export const ProfileManager = () => {
       );
       setEditingId("");
       setEditTitle("");
+    } catch (error) {
+      console.error("Update error:", error);
+      alert("Update failed");
     }
   };
 
@@ -161,7 +152,7 @@ export const ProfileManager = () => {
   );
 };
 
-// ✅ Upload Form Component
+// Upload Form Component
 const PhotoUpload = ({
   onUpload,
 }: {

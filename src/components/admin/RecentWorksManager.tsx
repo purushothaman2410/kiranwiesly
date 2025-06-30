@@ -1,11 +1,12 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PhotoUpload } from "./PhotoUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2, Edit } from "lucide-react";
+import { recentWorksApi } from "@/services/api";
 
 interface RecentWork {
   id: string;
@@ -15,38 +16,59 @@ interface RecentWork {
 }
 
 export const RecentWorksManager = () => {
-  const [recentWorks, setRecentWorks] = useState<RecentWork[]>([
-    {
-      id: "1",
-      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749223785/baby3_shqguj.jpg",
-      title: "Baby Shoots",
-      category: "Babies"
-    },
-    {
-      id: "2",
-      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224032/cm1_gkgutf.jpg",
-      title: "Wedding Shot",
-      category: "Wedding"
-    }
-  ]);
+  const [recentWorks, setRecentWorks] = useState<RecentWork[]>([]);
   const [editingId, setEditingId] = useState<string>("");
   const [editTitle, setEditTitle] = useState("");
   const [editCategory, setEditCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
 
   const categories = ["Nature", "Wedding", "Fashion", "Babies", "Couples"];
 
-  const handleUpload = (file: File, title: string) => {
-    const newWork: RecentWork = {
-      id: Date.now().toString(),
-      image: URL.createObjectURL(file),
-      title: title,
-      category: "Nature"
+  useEffect(() => {
+    const fetchRecentWorks = async () => {
+      try {
+        const data = selectedCategory 
+          ? await recentWorksApi.getByCategory(selectedCategory)
+          : await recentWorksApi.getAll();
+          
+        const formatted = data.map((item: any) => ({
+          id: item._id,
+          image: item.url,
+          title: item.title,
+          category: item.category,
+        }));
+        setRecentWorks(formatted);
+      } catch (error) {
+        console.error("Failed to fetch recent works:", error);
+      }
     };
-    setRecentWorks([...recentWorks, newWork]);
+
+    fetchRecentWorks();
+  }, [selectedCategory]);
+
+  const handleUpload = async (file: File, title: string) => {
+    try {
+      const data = await recentWorksApi.upload(file, title, "Nature");
+      setRecentWorks(prev => [...prev, {
+        id: data._id,
+        image: data.url,
+        title: data.title,
+        category: data.category,
+      }]);
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("Upload failed");
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setRecentWorks(recentWorks.filter(work => work.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      await recentWorksApi.delete(id);
+      setRecentWorks(recentWorks.filter(work => work.id !== id));
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Delete failed");
+    }
   };
 
   const handleEdit = (id: string, currentTitle: string, currentCategory: string) => {
@@ -55,17 +77,41 @@ export const RecentWorksManager = () => {
     setEditCategory(currentCategory);
   };
 
-  const handleSaveEdit = (id: string) => {
-    setRecentWorks(recentWorks.map(work =>
-      work.id === id ? { ...work, title: editTitle, category: editCategory } : work
-    ));
-    setEditingId("");
-    setEditTitle("");
-    setEditCategory("");
+  const handleSaveEdit = async (id: string) => {
+    try {
+      await recentWorksApi.update(id, editTitle, editCategory);
+      setRecentWorks(recentWorks.map(work =>
+        work.id === id ? { ...work, title: editTitle, category: editCategory } : work
+      ));
+      setEditingId("");
+      setEditTitle("");
+      setEditCategory("");
+    } catch (error) {
+      console.error("Update error:", error);
+      alert("Update failed");
+    }
   };
 
   return (
     <div className="space-y-6">
+      {/* Filter by Category */}
+      <div className="flex gap-4 items-center">
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filter by category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All Categories</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button variant="outline" onClick={() => setSelectedCategory("")}>
+          Clear Filter
+        </Button>
+      </div>
+
       <PhotoUpload onUpload={handleUpload} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -1,3 +1,4 @@
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Trash2, Edit } from "lucide-react";
+import { galleryApi } from "@/services/api";
 
 interface GalleryImage {
   id: string;
@@ -31,6 +33,7 @@ export const GalleryManager = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   const categories = ["Nature", "Wedding", "Fashion", "Babies", "Couples"];
@@ -39,8 +42,10 @@ export const GalleryManager = () => {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/gallery");
-        const data = await res.json();
+        const data = selectedCategory 
+          ? await galleryApi.getByCategory(selectedCategory)
+          : await galleryApi.getAll();
+        
         const formatted = data.map((img: any) => ({
           id: img._id,
           title: img.title,
@@ -49,12 +54,12 @@ export const GalleryManager = () => {
           url: img.url
         }));
         setGalleryImages(formatted);
-      } catch (err) {
-        console.error("Failed to fetch images:", err);
+      } catch (error) {
+        console.error("Failed to fetch images:", error);
       }
     };
     fetchImages();
-  }, []);
+  }, [selectedCategory]);
 
   // Upload new image
   const handleUpload = async (e: React.FormEvent) => {
@@ -66,51 +71,32 @@ export const GalleryManager = () => {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("image", file);
-    formData.append("title", title);
-    formData.append("category", category);
-    formData.append("description", description);
-
     try {
-      const res = await fetch("http://localhost:5000/api/gallery/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        const newImage: GalleryImage = {
-          id: data._id,
-          url: data.url,
-          title: data.title,
-          category: data.category,
-          description: data.description,
-        };
-        setGalleryImages((prev) => [...prev, newImage]);
-        setTitle("");
-        setDescription("");
-        setCategory("");
-        if (fileRef.current) fileRef.current.value = "";
-      } else {
-        console.error("Server error response:", data);
-        alert("Upload failed: " + (data.message || data.error || "Unknown error"));
-      }
+      const data = await galleryApi.upload(file, title, category);
+      
+      const newImage: GalleryImage = {
+        id: data._id,
+        url: data.url,
+        title: data.title,
+        category: data.category,
+        description: data.description,
+      };
+      
+      setGalleryImages((prev) => [...prev, newImage]);
+      setTitle("");
+      setDescription("");
+      setCategory("");
+      if (fileRef.current) fileRef.current.value = "";
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Something went wrong while uploading.");
+      alert("Upload failed");
     }
   };
 
   // Delete image
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/gallery/${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Failed to delete");
-
+      await galleryApi.delete(id);
       setGalleryImages((prev) => prev.filter((img) => img.id !== id));
     } catch (error) {
       console.error("Delete error:", error);
@@ -129,22 +115,8 @@ export const GalleryManager = () => {
   // Save edit
   const handleSaveEdit = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/gallery/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: editTitle,
-          category: editCategory,
-          description: editDescription,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.message || "Update failed");
-
+      const data = await galleryApi.update(id, editTitle, editCategory);
+      
       setGalleryImages((prev) =>
         prev.map((img) =>
           img.id === id
@@ -165,6 +137,24 @@ export const GalleryManager = () => {
 
   return (
     <div className="space-y-6 p-4">
+      {/* Filter by Category */}
+      <div className="flex gap-4 items-center">
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filter by category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All Categories</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button variant="outline" onClick={() => setSelectedCategory("")}>
+          Clear Filter
+        </Button>
+      </div>
+
       {/* Upload Form */}
       <form onSubmit={handleUpload} className="flex flex-col gap-2 md:flex-row md:items-end">
         <Input
@@ -272,4 +262,3 @@ export const GalleryManager = () => {
     </div>
   );
 };
-

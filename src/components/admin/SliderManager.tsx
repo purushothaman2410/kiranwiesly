@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Trash2, Edit } from "lucide-react";
+import { sliderApi } from "@/services/api";
 
 interface SliderImage {
   id: string;
@@ -18,50 +19,44 @@ export const SliderManager = () => {
   const [editTitle, setEditTitle] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/sliders")
-      .then(res => res.json())
-      .then(data => {
+    const fetchSliderImages = async () => {
+      try {
+        const data = await sliderApi.getAll();
         const formatted = data.map((item: any) => ({
           id: item._id,
           url: item.url,
           title: item.title
         }));
         setSliderImages(formatted);
-      });
+      } catch (error) {
+        console.error("Failed to load slider images:", error);
+      }
+    };
+
+    fetchSliderImages();
   }, []);
 
   const handleUpload = async (file: File, title: string) => {
-    const formData = new FormData();
-    formData.append("image", file);
-    formData.append("title", title);
-
     try {
-      const res = await fetch("http://localhost:5000/api/sliders/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error("Upload failed");
-
-      const data = await res.json();
-
+      const data = await sliderApi.upload(file, title);
       setSliderImages(prev => [...prev, {
         id: data._id,
         url: data.url,
         title: data.title
       }]);
-    } catch (err) {
-      console.error("Upload error:", err);
+    } catch (error) {
+      console.error("Upload error:", error);
       alert("Upload failed");
     }
   };
 
   const handleDelete = async (id: string) => {
-    const res = await fetch(`http://localhost:5000/api/sliders/${id}`, {
-      method: "DELETE"
-    });
-    if (res.ok) {
+    try {
+      await sliderApi.delete(id);
       setSliderImages(sliderImages.filter(img => img.id !== id));
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Delete failed");
     }
   };
 
@@ -71,20 +66,16 @@ export const SliderManager = () => {
   };
 
   const handleSaveEdit = async (id: string) => {
-    const res = await fetch(`http://localhost:5000/api/sliders/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ title: editTitle })
-    });
-
-    if (res.ok) {
+    try {
+      await sliderApi.update(id, editTitle);
       setSliderImages(sliderImages.map(img =>
         img.id === id ? { ...img, title: editTitle } : img
       ));
       setEditingId("");
       setEditTitle("");
+    } catch (error) {
+      console.error("Update error:", error);
+      alert("Update failed");
     }
   };
 
@@ -175,4 +166,3 @@ const PhotoUpload = ({ onUpload }: { onUpload: (file: File, title: string) => vo
 };
 
 export default SliderManager;
-

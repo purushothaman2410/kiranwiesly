@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Trash2, Edit } from "lucide-react";
+import { servicesApi } from "@/services/api";
 
 interface Service {
   id: string;
@@ -19,11 +20,11 @@ export const ServicesManager = () => {
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
 
-  // ✅ Fetch services from backend on mount
+  // Fetch services from backend on mount
   useEffect(() => {
-    fetch("http://localhost:5000/api/services")
-      .then(res => res.json())
-      .then(data => {
+    const fetchServices = async () => {
+      try {
+        const data = await servicesApi.getAll();
         const formatted = data.map((item: any) => ({
           id: item._id,
           image: item.url,
@@ -31,25 +32,18 @@ export const ServicesManager = () => {
           description: item.description,
         }));
         setServices(formatted);
-      });
+      } catch (error) {
+        console.error("Failed to fetch services:", error);
+      }
+    };
+
+    fetchServices();
   }, []);
 
-  // ✅ Upload service image + title + description
+  // Upload service image + title + description
   const handleUpload = async (file: File, title: string, description: string) => {
-    const formData = new FormData();
-    formData.append("image", file);
-    formData.append("title", title);
-    formData.append("description", description);
-
     try {
-      const res = await fetch("http://localhost:5000/api/services/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error("Upload failed");
-
-      const data = await res.json();
+      const data = await servicesApi.upload(file, title, description);
       setServices(prev => [...prev, {
         id: data._id,
         image: data.url,
@@ -62,26 +56,21 @@ export const ServicesManager = () => {
     }
   };
 
-  // ✅ Delete service by ID
+  // Delete service by ID
   const handleDelete = async (id: string) => {
-    const res = await fetch(`http://localhost:5000/api/services/${id}`, {
-      method: "DELETE",
-    });
-
-    if (res.ok) {
+    try {
+      await servicesApi.delete(id);
       setServices(services.filter(service => service.id !== id));
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Delete failed");
     }
   };
 
-  // ✅ Save title & description changes
+  // Save title & description changes
   const handleSaveEdit = async (id: string) => {
-    const res = await fetch(`http://localhost:5000/api/services/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: editTitle, description: editDescription }),
-    });
-
-    if (res.ok) {
+    try {
+      await servicesApi.update(id, editTitle, editDescription);
       setServices(services.map(service =>
         service.id === id
           ? { ...service, title: editTitle, description: editDescription }
@@ -90,6 +79,9 @@ export const ServicesManager = () => {
       setEditingId("");
       setEditTitle("");
       setEditDescription("");
+    } catch (error) {
+      console.error("Update error:", error);
+      alert("Update failed");
     }
   };
 
@@ -168,7 +160,7 @@ export const ServicesManager = () => {
   );
 };
 
-// ✅ Upload Form Component
+// Upload Form Component
 const PhotoUpload = ({
   onUpload,
 }: {
@@ -218,4 +210,3 @@ const PhotoUpload = ({
     </form>
   );
 };
-
