@@ -153,7 +153,7 @@ const SliderManager = () => {
 export default SliderManager;
 
 // Photo Upload Form Component
-const PhotoUpload = ({
+export const PhotoUpload = ({
   onUpload,
 }: {
   onUpload: (file: File, title: string) => void;
