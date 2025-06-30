@@ -14,7 +14,7 @@ const SlidingBackground = () => {
       try {
         const res = await fetch("http://localhost:5000/api/sliders");
         const data = await res.json();
-        const urls = data.map((img: any) => img.url);
+        const urls = data.map((img: any) => img.base64 || img.imageUrl); // Adjust based on your API response
         setImages(urls);
       } catch (error) {
         console.error("Failed to load slider images:", error);
