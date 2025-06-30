@@ -2,44 +2,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 
 export const Gallery = () => {
-  const galleryItems = [
-    {
-      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749223966/f1_hts7yr.jpg",
-      title: "Fashion Photography",
-      category: "Model, Event",
-      link: "https://www.instagram.com/kiranwesley_photography/"
-    },
-    {
-      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224049/hm3_povm3o.jpg",
-      title: "Wedding Photography",
-      category: "Bride Groom",
-      link: "https://www.instagram.com/kiranwesley_photography/"
-    },
-    {
-      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749223785/baby2_axou2k.jpg",
-      title: "Birthday Celebrations",
-      category: "Birthday Event",
-      link: "https://www.instagram.com/kiranwesley_photography/"
-    },
-    {
-      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224046/grrom4_dqydkq.jpg",
-      title: "Groom Shoot",
-      category: "OutDoor",
-      link: "https://www.instagram.com/kiranwesley_photography/"
-    },
-    {
-      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749223785/baby8_zpqk0e.jpg",
-      title: "Baby Photography",
-      category: "Babies, Film",
-      link: "https://www.instagram.com/kiranwesley_photography/"
-    },
-    {
-      image: "https://res.cloudinary.com/dqopsgfom/image/upload/v1749224008/couple1_yao4oo.jpg",
-      title: "Maternity Shoot",
-      category: "Mom To be",
-      link: "https://www.instagram.com/kiranwesley_photography/"
-    }
-  ];
+  const galleryItems =[]
 
   return (
     <section id="gallery" className="py-20 bg-gray-50">
