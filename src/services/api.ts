@@ -185,12 +185,11 @@ export const servicesApi = {
 
 // Profile API
 export const profileApi = {
-  upload: async (file: File, title: string) => {
+  upload: async (file: File) => {
     const formData = new FormData();
-    formData.append('image', file);
-    formData.append('title', title);
+    formData.append('file', file);
 
-    const response = await fetch(`${API_BASE_URL}/profiles/upload`, {
+    const response = await fetch(`${API_BASE_URL}/profile/upload`, {
       method: 'POST',
       body: formData,
     });
@@ -203,31 +202,15 @@ export const profileApi = {
   },
 
   getAll: async () => {
-    const response = await fetch(`${API_BASE_URL}/profiles`);
+    const response = await fetch(`${API_BASE_URL}/profile`);
     if (!response.ok) {
       throw new Error('Failed to fetch profile images');
     }
     return response.json();
   },
 
-  update: async (id: string, title: string) => {
-    const response = await fetch(`${API_BASE_URL}/profiles/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ title }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Update failed');
-    }
-
-    return response.json();
-  },
-
   delete: async (id: string) => {
-    const response = await fetch(`${API_BASE_URL}/profiles/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/profile/${id}`, {
       method: 'DELETE',
     });
 

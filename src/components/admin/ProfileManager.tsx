@@ -8,14 +8,11 @@ import { profileApi } from "@/services/api";
 
 interface ProfileImage {
   id: string;
-  url: string;
-  title: string;
-}
+  url: string;}
 
 export const ProfileManager = () => {
   const [profileImages, setProfileImages] = useState<ProfileImage[]>([]);
-  const [editingId, setEditingId] = useState<string>("");
-  const [editTitle, setEditTitle] = useState("");
+
 
   // Load all profiles on mount
   useEffect(() => {
@@ -24,8 +21,7 @@ export const ProfileManager = () => {
         const data = await profileApi.getAll();
         const formatted = data.map((item: any) => ({
           id: item._id,
-          url: item.url,
-          title: item.title,
+          url: item.image,
         }));
         setProfileImages(formatted);
       } catch (error) {
@@ -37,12 +33,12 @@ export const ProfileManager = () => {
   }, []);
 
   // Upload a new profile
-  const handleUpload = async (file: File, title: string) => {
+  const handleUpload = async (file: File) => {
     try {
-      const data = await profileApi.upload(file, title);
+      const data = await profileApi.upload(file);
       setProfileImages((prev) => [
         ...prev,
-        { id: data._id, url: data.url, title: data.title },
+        { id: data._id, url: data.base64 },
       ]);
     } catch (error) {
       console.error("Upload error:", error);
@@ -62,26 +58,6 @@ export const ProfileManager = () => {
   };
 
   // Edit title
-  const handleSaveEdit = async (id: string) => {
-    try {
-      await profileApi.update(id, editTitle);
-      setProfileImages((prev) =>
-        prev.map((img) =>
-          img.id === id ? { ...img, title: editTitle } : img
-        )
-      );
-      setEditingId("");
-      setEditTitle("");
-    } catch (error) {
-      console.error("Update error:", error);
-      alert("Update failed");
-    }
-  };
-
-  const handleEdit = (id: string, currentTitle: string) => {
-    setEditingId(id);
-    setEditTitle(currentTitle);
-  };
 
   return (
     <div className="space-y-6">
@@ -92,58 +68,19 @@ export const ProfileManager = () => {
           <Card key={image.id} className="overflow-hidden">
             <CardContent className="p-0">
               <img
-                src={image.url}
-                alt={image.title}
+                src={image.base64 || image.url}
+                alt={image.id}
                 className="w-full h-48 object-cover"
               />
-              <div className="p-4 space-y-2">
-                {editingId === image.id ? (
-                  <div className="space-y-2">
-                    <Input
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      className="text-sm"
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => handleSaveEdit(image.id)}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setEditingId("")}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <h3 className="font-medium text-sm">{image.title}</h3>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          handleEdit(image.id, image.title)
-                        }
-                      >
-                        <Edit size={14} />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(image.id)}
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </div>
+                <div className="flex justify-between items-center mb-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(image.id)}
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
+                </div>
             </CardContent>
           </Card>
         ))}
@@ -156,20 +93,18 @@ export const ProfileManager = () => {
 const PhotoUpload = ({
   onUpload,
 }: {
-  onUpload: (file: File, title: string) => void;
+  onUpload: (file: File) => void;
 }) => {
   const [file, setFile] = useState<File | null>(null);
-  const [title, setTitle] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !title) {
+    if (!file ) {
       alert("Image and title required");
       return;
     }
-    onUpload(file, title);
+    onUpload(file);
     setFile(null);
-    setTitle("");
   };
 
   return (
@@ -180,12 +115,6 @@ const PhotoUpload = ({
         onChange={(e) =>
           e.target.files && setFile(e.target.files[0])
         }
-      />
-      <Input
-        type="text"
-        placeholder="Profile title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
       />
       <Button type="submit">Upload</Button>
     </form>
