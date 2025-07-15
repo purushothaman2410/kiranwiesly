@@ -1,27 +1,52 @@
+# --- Stage 1: Build the Vite app ---
 
-# Step 1: Use an official Node.js runtime as the base image
-FROM node:18-alpine
+FROM node:18-slim AS builder
+ 
+# Install required build tools for native deps
 
-# Step 2: Set the working directory to /usr/src/app
-WORKDIR /usr/src/app
+RUN apt-get update && apt-get install -y python3 g++ make
+ 
+# Set working directory
 
-# Step 3: Copy package.json and package-lock.json (for npm install)
+WORKDIR /app
+ 
+# Copy package files first (for better Docker caching)
+
 COPY package*.json ./
+ 
+# Install dependencies with legacy peer deps to avoid conflict
 
-# Step 4: Install dependencies
-RUN npm install
+RUN npm install --legacy-peer-deps
+ 
+# Copy rest of the project files
 
-# Step 5: Copy the rest of the application files
 COPY . .
+ 
+# Build the Vite app
 
-# Step 6: Build the app
 RUN npm run build
+ 
+# --- Stage 2: Serve the built app with `serve` ---
 
-# Step 7: Install the serve package globally to serve the build
+FROM node:18-slim
+ 
+# Install `serve` globally
+
 RUN npm install -g serve
+ 
+# Working directory for runtime
 
-# Step 8: Expose the port the app will run on
+WORKDIR /app
+ 
+# Copy built files from builder
+
+COPY --from=builder /app/dist ./dist
+ 
+# Expose the port
+
 EXPOSE 8080
+ 
+# Serve the frontend
 
-# Step 9: Serve the app from the "dist" folder
 CMD ["serve", "-s", "dist", "-l", "8080"]
+ 
